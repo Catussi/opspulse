@@ -37,6 +37,12 @@ infra/terraform/.terraform/
 infra/terraform/*.tfstate
 infra/terraform/*.tfstate.*
 
+# dbt
+transformaciones/dbt/target/
+transformaciones/dbt/dbt_packages/
+transformaciones/dbt/logs/
+transformaciones/dbt/.user.yml
+
 # Logs
 *.log
 logs/
