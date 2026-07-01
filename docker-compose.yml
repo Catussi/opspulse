@@ -49,6 +49,7 @@ services:
     volumes:
       - ./backend:/codigo
       - ./datos/crudos:/datos/crudos
+      - ./transformaciones/dbt:/dbt
     depends_on:
       postgres:
         condition: service_healthy
@@ -69,6 +70,7 @@ services:
     volumes:
       - ./backend:/codigo
       - ./datos/crudos:/datos/crudos
+      - ./transformaciones/dbt:/dbt
     depends_on:
       postgres:
         condition: service_healthy
@@ -108,10 +110,9 @@ services:
 
   # Airflow standalone: orquestación de dbt y automatización
   # Uso: docker compose --profile datos up airflow
+  # Nota: la primera vez tarda ~2-3 min instalando paquetes extra vía _PIP_ADDITIONAL_REQUIREMENTS
   airflow:
-    build:
-      context: .
-      dockerfile: orquestacion/airflow/Dockerfile
+    image: apache/airflow:2.10.4-python3.12
     container_name: opspulse-airflow
     profiles: ["datos"]
     command: standalone
@@ -123,6 +124,7 @@ services:
       AIRFLOW_CONN_OPSPULSE_API: http://api:8000
       _AIRFLOW_WWW_USER_USERNAME: admin
       _AIRFLOW_WWW_USER_PASSWORD: admin
+      _PIP_ADDITIONAL_REQUIREMENTS: apache-airflow-providers-http==4.13.2
     volumes:
       - ./orquestacion/airflow/dags:/opt/airflow/dags
       - ./transformaciones/dbt:/opt/dbt

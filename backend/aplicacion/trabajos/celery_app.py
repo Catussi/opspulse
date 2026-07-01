@@ -18,6 +18,7 @@ aplicacion_celery = Celery(
     include=[
         "aplicacion.trabajos.tareas_etl",
         "aplicacion.trabajos.tareas_automatizacion",
+        "aplicacion.trabajos.tareas_dbt",
     ],
 )
 
