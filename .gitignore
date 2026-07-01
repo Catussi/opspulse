@@ -1,0 +1,46 @@
+# Dependencias
+node_modules/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Entornos y secretos
+.env
+.env.local
+*.pem
+
+# Build y caché
+dist/
+build/
+.angular/
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+
+# Datos locales y artefactos ML
+datos/crudos/*
+!datos/crudos/.gitkeep
+mlflow_artifacts/
+*.joblib
+
+# Terraform
+infra/terraform/.terraform/
+infra/terraform/*.tfstate
+infra/terraform/*.tfstate.*
+
+# Logs
+*.log
+logs/
+
+# Sistema
+.DS_Store
+Thumbs.db

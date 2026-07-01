@@ -1,0 +1,89 @@
+<section class="panel">
+  <header class="panel__encabezado">
+    <div>
+      <h1>OpsPulse</h1>
+      <p class="panel__subtitulo">
+        Panel de operaciones — ingesta, métricas y pedidos en tiempo casi real.
+      </p>
+    </div>
+    <button type="button" class="boton boton--secundario" (click)="refrescarDatos()" [disabled]="cargando()">
+      Actualizar
+    </button>
+  </header>
+
+  @if (mensaje()) {
+    <p class="panel__mensaje" role="status">{{ mensaje() }}</p>
+  }
+
+  <!-- Tarjetas de KPIs -->
+  <div class="metricas">
+    <article class="metrica">
+      <span class="metrica__etiqueta">Total pedidos</span>
+      <strong class="metrica__valor">{{ resumen()?.total_pedidos ?? '—' }}</strong>
+    </article>
+    <article class="metrica">
+      <span class="metrica__etiqueta">Ventas totales</span>
+      <strong class="metrica__valor">
+        {{ resumen()?.monto_total_ventas | currency:'CLP':'symbol-narrow':'1.0-0' }}
+      </strong>
+    </article>
+    <article class="metrica">
+      <span class="metrica__etiqueta">Producto top</span>
+      <strong class="metrica__valor metrica__valor--texto">
+        {{ resumen()?.producto_mas_vendido ?? 'Sin datos' }}
+      </strong>
+    </article>
+    <article class="metrica">
+      <span class="metrica__etiqueta">Región líder</span>
+      <strong class="metrica__valor metrica__valor--texto">
+        {{ resumen()?.region_top ?? 'Sin datos' }}
+      </strong>
+    </article>
+  </div>
+
+  <!-- Zona de carga CSV -->
+  <section class="carga">
+    <h2>Ingesta de datos</h2>
+    <p>
+      Sube un CSV con columnas:
+      <code>codigo_pedido, producto, cantidad, precio_unitario, region, fecha_pedido</code>
+    </p>
+    <label class="carga__etiqueta">
+      Seleccionar archivo CSV
+      <input type="file" accept=".csv" (change)="alSeleccionarArchivo($event)" [disabled]="cargando()" />
+    </label>
+  </section>
+
+  <!-- Tabla de pedidos -->
+  <section class="tabla-contenedor">
+    <h2>Últimos pedidos</h2>
+    @if (pedidos().length === 0) {
+      <p class="tabla-contenedor__vacio">No hay pedidos aún. Sube un CSV o usa el seed de demostración.</p>
+    } @else {
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Total</th>
+            <th>Región</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (pedido of pedidos(); track pedido.id) {
+            <tr>
+              <td>{{ pedido.codigo_pedido }}</td>
+              <td>{{ pedido.producto }}</td>
+              <td>{{ pedido.cantidad }}</td>
+              <td>{{ pedido.monto_total | currency:'CLP':'symbol-narrow':'1.0-0' }}</td>
+              <td>{{ pedido.region }}</td>
+              <td>{{ pedido.fecha_pedido | date:'short' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+</section>

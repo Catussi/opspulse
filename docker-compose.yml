@@ -1,0 +1,92 @@
+# OpsPulse — entorno local de desarrollo
+# Levanta todos los servicios con: docker compose up --build
+
+services:
+  # Base de datos principal: almacena pedidos, inventario y reglas
+  postgres:
+    image: postgres:16-alpine
+    container_name: opspulse-postgres
+    environment:
+      POSTGRES_USER: opspulse
+      POSTGRES_PASSWORD: opspulse_dev
+      POSTGRES_DB: opspulse
+    ports:
+      - "5433:5432"  # Host 5433: evita conflicto si otro Postgres usa 5432
+    volumes:
+      - datos_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U opspulse -d opspulse"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Cola de mensajes para trabajos asíncronos (ETL, alertas, webhooks)
+  redis:
+    image: redis:7-alpine
+    container_name: opspulse-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # API REST principal (FastAPI)
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: opspulse-api
+    command: uvicorn aplicacion.principal:aplicacion --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8001:8000"  # Host 8001: evita conflicto si otro proyecto usa 8000
+    environment:
+      ENTORNO: desarrollo
+      URL_BASE_DATOS: postgresql+psycopg://opspulse:opspulse_dev@postgres:5432/opspulse
+      URL_REDIS: redis://redis:6379/0
+    volumes:
+      - ./backend:/codigo
+      - ./datos/crudos:/datos/crudos
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Trabajador Celery: ejecuta pipelines ETL y automatizaciones en segundo plano
+  trabajador:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: opspulse-trabajador
+    command: celery -A aplicacion.trabajos.celery_app:aplicacion_celery worker --loglevel=info
+    environment:
+      ENTORNO: desarrollo
+      URL_BASE_DATOS: postgresql+psycopg://opspulse:opspulse_dev@postgres:5432/opspulse
+      URL_REDIS: redis://redis:6379/0
+    volumes:
+      - ./backend:/codigo
+      - ./datos/crudos:/datos/crudos
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Panel opcional para monitorear tareas Celery (útil en demos)
+  flower:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: opspulse-flower
+    command: celery -A aplicacion.trabajos.celery_app:aplicacion_celery flower --port=5555
+    ports:
+      - "5555:5555"
+    environment:
+      URL_REDIS: redis://redis:6379/0
+    depends_on:
+      - redis
+
+volumes:
+  datos_postgres:

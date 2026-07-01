@@ -1,0 +1,6 @@
+codigo_pedido,producto,cantidad,precio_unitario,region,fecha_pedido
+PED-001,Laptop Pro 14,2,899990,Valparaiso,2026-06-01T10:30:00
+PED-002,Mouse Inalambrico,15,19990,Santiago,2026-06-01T11:00:00
+PED-003,Teclado Mecanico,8,45990,Valparaiso,2026-06-02T09:15:00
+PED-004,Monitor 27 pulgadas,3,249990,Santiago,2026-06-02T14:20:00
+PED-005,Webcam HD,12,34990,Vina del Mar,2026-06-03T16:45:00
