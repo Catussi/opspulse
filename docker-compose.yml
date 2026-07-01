@@ -14,6 +14,7 @@ services:
       - "5433:5432"  # Host 5433: evita conflicto si otro Postgres usa 5432
     volumes:
       - datos_postgres:/var/lib/postgresql/data
+      - ./datos/postgres/init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U opspulse -d opspulse"]
       interval: 5s
@@ -87,6 +88,49 @@ services:
       URL_REDIS: redis://redis:6379/0
     depends_on:
       - redis
+
+  # dbt: transformaciones SQL (ejecutar bajo demanda)
+  # Uso: docker compose run --rm dbt run
+  dbt:
+    build:
+      context: ./transformaciones/dbt
+      dockerfile: Dockerfile
+    container_name: opspulse-dbt
+    profiles: ["datos"]
+    environment:
+      DBT_HOST: postgres
+      DBT_PORT: "5432"
+    volumes:
+      - ./transformaciones/dbt:/dbt
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Airflow standalone: orquestación de dbt y automatización
+  # Uso: docker compose --profile datos up airflow
+  airflow:
+    build:
+      context: .
+      dockerfile: orquestacion/airflow/Dockerfile
+    container_name: opspulse-airflow
+    profiles: ["datos"]
+    command: standalone
+    ports:
+      - "8081:8080"
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://opspulse:opspulse_dev@postgres:5432/airflow
+      AIRFLOW_CONN_OPSPULSE_API: http://api:8000
+      _AIRFLOW_WWW_USER_USERNAME: admin
+      _AIRFLOW_WWW_USER_PASSWORD: admin
+    volumes:
+      - ./orquestacion/airflow/dags:/opt/airflow/dags
+      - ./transformaciones/dbt:/opt/dbt
+    depends_on:
+      postgres:
+        condition: service_healthy
+      api:
+        condition: service_started
 
 volumes:
   datos_postgres:

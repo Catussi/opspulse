@@ -23,7 +23,9 @@ OpsPulse centraliza el ciclo operativo de un negocio de retail:
 | Base de datos | PostgreSQL 16 |
 | Frontend | Angular 19, TypeScript |
 | Contenedores | Docker Compose |
-| En desarrollo | Apache Airflow, dbt, Terraform (AWS), MLflow |
+| Transformaciones | dbt (staging → marts) |
+| Orquestación | Apache Airflow (perfil `datos`) |
+| En desarrollo | Terraform AWS, MLflow |
 
 ## Cómo ejecutarlo
 
@@ -39,6 +41,7 @@ docker compose up --build
 | Flower (monitoreo Celery) | http://localhost:5555 |
 | Frontend Angular | http://localhost:4200 |
 | PostgreSQL (desde el host) | `localhost:5433` |
+| Airflow (perfil `datos`) | http://localhost:8081 — `admin` / `admin` |
 
 ### Probar ingesta de un CSV
 
@@ -60,6 +63,23 @@ copy .env.ejemplo .env
 
 py scripts/sembrar_datos.py
 py -m uvicorn aplicacion.principal:aplicacion --reload
+```
+
+### Transformaciones dbt
+
+```powershell
+docker compose run --rm dbt run
+```
+
+Materializa `marts.mart_resumen_pedidos`, que la API usa para los KPIs del dashboard.
+
+### Airflow (opcional)
+
+```powershell
+# Solo si la DB airflow no existe aún (volumen Postgres previo a fase 3):
+docker compose exec postgres psql -U opspulse -d postgres -c "CREATE DATABASE airflow;"
+
+docker compose --profile datos up airflow
 ```
 
 ### Frontend

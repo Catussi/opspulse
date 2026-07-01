@@ -1,0 +1,22 @@
+name: opspulse
+version: 1.0.0
+config-version: 2
+
+profile: opspulse
+
+model-paths: ["models"]
+analysis-paths: ["analisis"]
+test-paths: ["pruebas"]
+macro-paths: ["macros"]
+
+models:
+  opspulse:
+    staging:
+      +schema: staging
+      +materialized: view
+    intermediate:
+      +schema: intermediate
+      +materialized: view
+    marts:
+      +schema: marts
+      +materialized: table

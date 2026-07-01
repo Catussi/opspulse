@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: operacional
+    description: Tablas escritas por la API y el worker Celery
+    schema: public
+    tables:
+      - name: pedidos
+        description: Pedidos de venta ingeridos por CSV o API

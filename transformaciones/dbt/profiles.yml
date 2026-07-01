@@ -1,0 +1,13 @@
+# Perfil local Docker. Desde el host usar host: localhost y port: 5433
+opspulse:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('DBT_HOST', 'postgres') }}"
+      user: opspulse
+      password: opspulse_dev
+      port: "{{ env_var('DBT_PORT', '5432') | int }}"
+      dbname: opspulse
+      schema: public
+      threads: 4
