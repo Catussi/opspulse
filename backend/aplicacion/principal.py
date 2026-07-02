@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from aplicacion.base_datos import crear_tablas
 from aplicacion.configuracion import obtener_configuracion
+from aplicacion.metricas.instrumentacion import configurar_metricas_http
 from aplicacion.rutas import (
     router_automatizacion,
     router_ingesta,
@@ -66,6 +67,8 @@ def crear_aplicacion() -> FastAPI:
     app.include_router(router_automatizacion)
     app.include_router(router_transformaciones)
     app.include_router(router_ml)
+
+    configurar_metricas_http(app)
 
     return app
 

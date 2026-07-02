@@ -22,6 +22,7 @@ OpsPulse modela el ciclo operativo de un negocio retail de punta a punta:
 | **Métricas** | KPIs agregados consumidos por el dashboard Angular |
 | **Automatización** | Reglas de negocio con webhooks (alertas por ventas bajas, etc.) |
 | **Infraestructura** | Terraform para AWS (S3, RDS PostgreSQL, ECS Fargate) |
+| **Observabilidad** | Métricas Prometheus y dashboards Grafana |
 
 ## Stack
 
@@ -36,8 +37,8 @@ OpsPulse modela el ciclo operativo de un negocio retail de punta a punta:
 | Contenedores | Docker Compose |
 | Infraestructura | Terraform AWS (S3, RDS, ECS, IAM, CloudWatch) |
 | Machine learning | MLflow, scikit-learn |
+| Observabilidad | Prometheus, Grafana |
 | CI/CD | GitHub Actions |
-| En desarrollo | Prometheus + Grafana |
 
 ## Arquitectura
 
@@ -100,6 +101,9 @@ docker compose up --build
 | API y OpenAPI | http://localhost:8001/api/docs |
 | Flower (Celery) | http://localhost:5555 |
 | MLflow | http://localhost:5000 |
+| Prometheus (perfil `observabilidad`) | http://localhost:9090 |
+| Grafana (perfil `observabilidad`) | http://localhost:3000 — `admin` / `admin` |
+| Métricas API | http://localhost:8001/metrics |
 | Frontend | http://localhost:4200 |
 | PostgreSQL (host) | `localhost:5433` |
 | Airflow (perfil `datos`) | http://localhost:8081 — `admin` / `admin` |
@@ -145,6 +149,14 @@ curl -X POST "http://localhost:8001/api/v1/ml/predecir-venta" `
 
 UI de experimentos: http://localhost:5000. Detalle en [modelado/README.md](modelado/README.md).
 
+### Observabilidad (Prometheus + Grafana)
+
+```powershell
+docker compose --profile observabilidad up --build
+```
+
+Dashboard provisionado en Grafana: **OpsPulse — Operaciones** (latencia API, Celery, Redis y contadores de negocio). Detalle en [observabilidad/README.md](observabilidad/README.md).
+
 ### Desarrollo local
 
 <details>
@@ -176,6 +188,7 @@ npm start
 
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
+| `GET` | `/metrics` | Métricas Prometheus (API + negocio) |
 | `GET` | `/salud` | Health check |
 | `POST` | `/api/v1/ingesta/csv` | Ingesta asíncrona de pedidos |
 | `GET` | `/api/v1/metricas/resumen-pedidos` | KPIs del dashboard |
@@ -197,6 +210,7 @@ opspulse/
 ├── infra/terraform/          # IaC AWS
 ├── datos/ejemplo/            # CSV de demostración
 ├── modelado/                 # Entrenamiento ML y notas
+├── observabilidad/           # Prometheus, Grafana y dashboards
 ├── docs/                     # Arquitectura, convenciones e imágenes
 └── .github/workflows/        # CI backend y validación Terraform
 ```
@@ -210,7 +224,7 @@ opspulse/
 | V3 | dbt + Airflow | ✅ |
 | V4 | Terraform AWS (ECS, RDS, S3) | ✅ |
 | V5 | MLflow + endpoint predictivo | ✅ |
-| V6 | Prometheus + Grafana | 📋 Planificado |
+| V6 | Prometheus + Grafana | ✅ |
 
 ## Convenciones
 
@@ -223,6 +237,7 @@ El dominio de negocio está nombrado en español (`ServicioPedidos`, `eventos_in
 - [dbt](transformaciones/dbt/README.md)
 - [Airflow](orquestacion/airflow/README.md)
 - [Modelado ML](modelado/README.md)
+- [Observabilidad](observabilidad/README.md)
 
 ## Sobre este proyecto
 
