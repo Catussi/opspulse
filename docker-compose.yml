@@ -159,6 +159,68 @@ services:
     volumes:
       - mlflow_datos:/mlflow
 
+  # --- Perfil observabilidad: Prometheus + Grafana ---
+  # Uso: docker compose --profile observabilidad up
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    container_name: opspulse-prometheus
+    profiles: ["observabilidad"]
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observabilidad/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - datos_prometheus:/prometheus
+    depends_on:
+      api:
+        condition: service_started
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    container_name: opspulse-grafana
+    profiles: ["observabilidad"]
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_DEFAULT_THEME: light
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./observabilidad/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observabilidad/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+
+  celery-exporter:
+    image: danihodovic/celery-exporter:0.11.2
+    container_name: opspulse-celery-exporter
+    profiles: ["observabilidad"]
+    environment:
+      CE_BROKER_URL: redis://redis:6379/0
+    ports:
+      - "9808:9808"
+    depends_on:
+      redis:
+        condition: service_healthy
+      trabajador:
+        condition: service_started
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.66.0
+    container_name: opspulse-redis-exporter
+    profiles: ["observabilidad"]
+    environment:
+      REDIS_ADDR: redis://redis:6379
+    ports:
+      - "9121:9121"
+    depends_on:
+      redis:
+        condition: service_healthy
+
 volumes:
   datos_postgres:
   mlflow_datos:
+  datos_prometheus:

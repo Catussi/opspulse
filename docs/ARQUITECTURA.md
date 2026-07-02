@@ -69,7 +69,7 @@ flowchart TB
 | V3 | dbt + Airflow | Implementado |
 | V4 | Terraform AWS (ECS, RDS, S3) | Implementado |
 | V5 | MLflow + endpoint predictivo | Implementado |
-| V6 | Prometheus + Grafana | Planificado |
+| V6 | Prometheus + Grafana | Implementado |
 
 ## Decisiones de diseño
 
@@ -116,3 +116,28 @@ Predicción del **monto total de venta** (`cantidad × precio`) a partir de prod
 ### Por qué MLflow
 
 Centraliza experimentos, métricas (MAE, RMSE) y versionado del modelo sin acoplar el código de inferencia a un archivo `.joblib` suelto. Es el mismo patrón que usaría en un entorno con varios experimentos y despliegues graduales.
+
+## Observabilidad (fase 6)
+
+### Qué se monitorea
+
+| Capa | Fuente | Ejemplos |
+|------|--------|----------|
+| API | `GET /metrics` (instrumentator) | Latencia HTTP, peticiones por ruta, 4xx/5xx |
+| Negocio | Contadores en `aplicacion/metricas/` | Ingestas CSV, predicciones y entrenamientos ML |
+| Celery | celery-exporter | Tareas exitosas/fallidas, workers activos |
+| Redis | redis-exporter | Memoria y clientes conectados |
+
+### Flujo
+
+```
+FastAPI /metrics ──┐
+celery-exporter ───┼──► Prometheus ──► Grafana (dashboard provisionado)
+redis-exporter ────┘
+```
+
+Los health checks (`/salud`) quedan fuera de las series HTTP para no contaminar alertas con probes de orquestadores.
+
+### Perfil Docker
+
+`docker compose --profile observabilidad up` levanta Prometheus (9090), Grafana (3000) y los exporters sin afectar el stack mínimo de desarrollo.

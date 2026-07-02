@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from aplicacion.base_datos import obtener_sesion
 from aplicacion.esquemas.ingesta import EventoIngestaRespuesta, ResultadoIngestaCsv
 from aplicacion.modelos.evento_ingesta import EventoIngesta
+from aplicacion.metricas.prometheus import INGESTAS_CSV
 from aplicacion.servicios.servicio_ingesta import ServicioIngesta
 
 router = APIRouter(prefix="/api/v1/ingesta", tags=["Ingesta"])
@@ -38,6 +39,7 @@ async def subir_csv_pedidos(
 
     servicio = ServicioIngesta(sesion)
     evento, tarea_id = servicio.registrar_ingesta_csv(archivo.filename, contenido)
+    INGESTAS_CSV.labels(estado="aceptada").inc()
 
     return ResultadoIngestaCsv(
         evento_id=evento.id,

@@ -10,6 +10,7 @@ from aplicacion.esquemas.prediccion import (
 )
 from aplicacion.ml.entrenamiento import entrenar_y_registrar
 from aplicacion.ml.inferencia import ModeloNoDisponibleError, invalidar_cache_modelo, predecir_venta
+from aplicacion.metricas.prometheus import ENTRENAMIENTOS_ML, PREDICCIONES_ML
 from aplicacion.trabajos.tareas_ml import entrenar_modelo_ventas
 
 router = APIRouter(prefix="/api/v1/ml", tags=["Machine Learning"])
@@ -23,8 +24,11 @@ def predecir_monto_venta(entrada: PrediccionVentaEntrada) -> PrediccionVentaSali
     Requiere haber entrenado previamente vía POST /entrenar.
     """
     try:
-        return predecir_venta(entrada)
+        salida = predecir_venta(entrada)
+        PREDICCIONES_ML.labels(estado="exito").inc()
+        return salida
     except ModeloNoDisponibleError as error:
+        PREDICCIONES_ML.labels(estado="modelo_no_disponible").inc()
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=str(error),
@@ -41,6 +45,7 @@ def disparar_entrenamiento(asincrono: bool = True) -> EntrenamientoRespuesta:
     """
     if asincrono:
         tarea = entrenar_modelo_ventas.delay()
+        ENTRENAMIENTOS_ML.labels(modo="asincrono").inc()
         return EntrenamientoRespuesta(
             mensaje="Entrenamiento del modelo encolado en Celery.",
             tarea_id=tarea.id,
@@ -52,6 +57,7 @@ def disparar_entrenamiento(asincrono: bool = True) -> EntrenamientoRespuesta:
     try:
         resultado = entrenar_y_registrar(sesion)
         invalidar_cache_modelo()
+        ENTRENAMIENTOS_ML.labels(modo="sincrono").inc()
         return EntrenamientoRespuesta(
             mensaje="Modelo entrenado y registrado en MLflow.",
             run_id=resultado.run_id,
