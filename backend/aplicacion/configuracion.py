@@ -37,6 +37,11 @@ class Configuracion(BaseSettings):
     # Carpeta donde se guardan CSV antes del ETL (Docker: /datos/crudos)
     ruta_datos_crudos: str = "/datos/crudos"
 
+    # MLflow: tracking server y nombre del modelo en el registry
+    url_mlflow: str = "http://localhost:5000"
+    experimento_mlflow: str = "opspulse-ventas"
+    nombre_modelo_ml: str = "modelo-prediccion-ventas"
+
     @property
     def lista_cors(self) -> list[str]:
         """Convierte la cadena de orígenes en una lista para FastAPI."""

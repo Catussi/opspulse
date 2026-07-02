@@ -18,6 +18,10 @@ flower==2.0.1
 pandas==2.2.3
 dbt-postgres==1.9.0
 
+# Machine learning
+mlflow==2.19.0
+scikit-learn==1.6.1
+
 # Utilidades
 python-multipart==0.0.20
 httpx==0.28.1

@@ -35,8 +35,9 @@ OpsPulse modela el ciclo operativo de un negocio retail de punta a punta:
 | Orquestación | Apache Airflow |
 | Contenedores | Docker Compose |
 | Infraestructura | Terraform AWS (S3, RDS, ECS, IAM, CloudWatch) |
+| Machine learning | MLflow, scikit-learn |
 | CI/CD | GitHub Actions |
-| En desarrollo | MLflow, Prometheus + Grafana |
+| En desarrollo | Prometheus + Grafana |
 
 ## Arquitectura
 
@@ -64,6 +65,10 @@ flowchart LR
         S3[(S3 — crudos)]
     end
 
+    subgraph ml [ML]
+        MLF[MLflow]
+    end
+
     UI -->|REST| FAST
     AF -->|HTTP| FAST
     FAST --> REDIS
@@ -71,6 +76,8 @@ flowchart LR
     CELERY --> PG
     FAST --> PG
     FAST --> S3
+    CELERY -->|registra modelo| MLF
+    FAST -->|carga modelo| MLF
 ```
 
 Airflow **no ejecuta dbt directamente**: los DAGs llaman a la API (`POST /api/v1/transformaciones/ejecutar-dbt`) y Celery corre `dbt run` en el worker. Así evito conflictos de dependencias y builds pesados en la imagen de Airflow.
@@ -92,6 +99,7 @@ docker compose up --build
 |----------|-----|
 | API y OpenAPI | http://localhost:8001/api/docs |
 | Flower (Celery) | http://localhost:5555 |
+| MLflow | http://localhost:5000 |
 | Frontend | http://localhost:4200 |
 | PostgreSQL (host) | `localhost:5433` |
 | Airflow (perfil `datos`) | http://localhost:8081 — `admin` / `admin` |
@@ -121,7 +129,21 @@ Materializa `marts.mart_resumen_pedidos`, que la API prioriza para los KPIs del 
 docker compose --profile datos up airflow
 ```
 
-DAGs incluidos: `transformaciones_dbt` (diario 06:00) y `evaluar_reglas_automatizacion` (cada 15 min).
+DAGs incluidos: `transformaciones_dbt` (diario 06:00), `evaluar_reglas_automatizacion` (cada 15 min) y `entrenar_modelo_ml` (domingos 03:00).
+
+### Machine learning (MLflow)
+
+```powershell
+# 1. Entrenar (requiere pedidos en la BD — seed o CSV)
+curl -X POST "http://localhost:8001/api/v1/ml/entrenar?asincrono=false"
+
+# 2. Predecir monto de un pedido hipotético
+curl -X POST "http://localhost:8001/api/v1/ml/predecir-venta" `
+  -H "Content-Type: application/json" `
+  -d "{\"producto\":\"Laptop Pro 14\",\"cantidad\":2,\"region\":\"Santiago\",\"fecha_pedido\":\"2026-06-10T12:00:00Z\"}"
+```
+
+UI de experimentos: http://localhost:5000. Detalle en [modelado/README.md](modelado/README.md).
 
 ### Desarrollo local
 
@@ -159,6 +181,8 @@ npm start
 | `GET` | `/api/v1/metricas/resumen-pedidos` | KPIs del dashboard |
 | `POST` | `/api/v1/transformaciones/ejecutar-dbt` | Dispara `dbt run` vía Celery |
 | `POST` | `/api/v1/automatizacion/evaluar` | Evalúa reglas y dispara webhooks |
+| `POST` | `/api/v1/ml/entrenar` | Entrena modelo de ventas (Celery o sync) |
+| `POST` | `/api/v1/ml/predecir-venta` | Predice monto de un pedido |
 
 Documentación interactiva en `/api/docs`.
 
@@ -172,6 +196,7 @@ opspulse/
 ├── orquestacion/airflow/     # DAGs programados
 ├── infra/terraform/          # IaC AWS
 ├── datos/ejemplo/            # CSV de demostración
+├── modelado/                 # Entrenamiento ML y notas
 ├── docs/                     # Arquitectura, convenciones e imágenes
 └── .github/workflows/        # CI backend y validación Terraform
 ```
@@ -184,7 +209,7 @@ opspulse/
 | V2 | Dashboard Angular | ✅ |
 | V3 | dbt + Airflow | ✅ |
 | V4 | Terraform AWS (ECS, RDS, S3) | ✅ |
-| V5 | MLflow + endpoint predictivo | 📋 Planificado |
+| V5 | MLflow + endpoint predictivo | ✅ |
 | V6 | Prometheus + Grafana | 📋 Planificado |
 
 ## Convenciones
@@ -197,6 +222,7 @@ El dominio de negocio está nombrado en español (`ServicioPedidos`, `eventos_in
 - [Terraform AWS](infra/terraform/README.md)
 - [dbt](transformaciones/dbt/README.md)
 - [Airflow](orquestacion/airflow/README.md)
+- [Modelado ML](modelado/README.md)
 
 ## Sobre este proyecto
 

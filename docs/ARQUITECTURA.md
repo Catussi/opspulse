@@ -68,7 +68,7 @@ flowchart TB
 | V2 | Dashboard Angular | Implementado |
 | V3 | dbt + Airflow | Implementado |
 | V4 | Terraform AWS (ECS, RDS, S3) | Implementado |
-| V5 | MLflow + endpoint predictivo | Planificado |
+| V5 | MLflow + endpoint predictivo | Implementado |
 | V6 | Prometheus + Grafana | Planificado |
 
 ## Decisiones de diseño
@@ -99,3 +99,20 @@ Airflow         →  orquestación de pipelines ETL programados
 ```
 
 La configuración de Terraform y los DAGs de Airflow están en sus carpetas respectivas dentro del repositorio.
+
+## Machine learning (fase 5)
+
+### Caso de uso
+
+Predicción del **monto total de venta** (`cantidad × precio`) a partir de producto, región, cantidad y día de la semana. El modelo aprende patrones de precio promedio por producto/región sobre pedidos históricos en PostgreSQL.
+
+### Flujo
+
+1. `POST /api/v1/ml/entrenar` encola (o ejecuta) entrenamiento en Celery.  
+2. El worker lee `pedidos`, entrena un pipeline sklearn y registra el artefacto en **MLflow** (`modelo-prediccion-ventas`).  
+3. `POST /api/v1/ml/predecir-venta` carga el modelo desde el registry y devuelve el monto estimado.  
+4. El DAG `entrenar_modelo_ml` re-entrena semanalmente vía Airflow.
+
+### Por qué MLflow
+
+Centraliza experimentos, métricas (MAE, RMSE) y versionado del modelo sin acoplar el código de inferencia a un archivo `.joblib` suelto. Es el mismo patrón que usaría en un entorno con varios experimentos y despliegues graduales.

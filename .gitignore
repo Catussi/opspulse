@@ -30,6 +30,7 @@ htmlcov/
 datos/crudos/*
 !datos/crudos/.gitkeep
 mlflow_artifacts/
+mlruns/
 *.joblib
 
 # Terraform
