@@ -34,8 +34,14 @@ jobs:
       - name: terraform validate
         run: terraform validate
 
+      - name: terraform plan (skipped si no hay secrets)
+        if: ${{ secrets.AWS_ACCESS_KEY_ID == '' || secrets.AWS_SECRET_ACCESS_KEY == '' }}
+        run: echo "Se omite terraform plan: faltan secrets AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY."
+
       - name: terraform plan (dry-run)
+        if: ${{ secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' }}
         run: terraform plan -input=false -var="db_password=plan-only-placeholder"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_EC2_METADATA_DISABLED: "true"
