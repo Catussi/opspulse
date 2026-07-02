@@ -59,6 +59,28 @@ services:
         condition: service_healthy
       mlflow:
         condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/salud/listo')\"",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  # Dashboard Angular (nginx + proxy a API)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: opspulse-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      api:
+        condition: service_healthy
 
   # Trabajador Celery: ejecuta pipelines ETL y automatizaciones en segundo plano
   trabajador:

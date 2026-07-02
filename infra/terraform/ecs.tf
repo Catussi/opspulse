@@ -52,7 +52,7 @@ resource "aws_ecs_task_definition" "api" {
       environment = [
         { name = "ENTORNO", value = var.entorno },
         { name = "URL_BASE_DATOS", value = "postgresql+psycopg://${var.db_username}:${var.db_password}@${aws_db_instance.postgres.address}:5432/opspulse" },
-        { name = "URL_REDIS", value = "redis://placeholder:6379/0" },
+        { name = "URL_REDIS", value = var.url_redis != "" ? var.url_redis : "redis://placeholder:6379/0" },
         { name = "RUTA_DATOS_CRUDOS", value = "s3://${aws_s3_bucket.datos_crudos.bucket}/" }
       ]
       logConfiguration = {

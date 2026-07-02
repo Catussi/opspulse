@@ -40,6 +40,13 @@ variable "api_image" {
   default     = ""
 }
 
+variable "url_redis" {
+  description = "URL de Redis para Celery (ElastiCache o externo). Vacío usa placeholder de demo."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
 variable "allowed_cidr_api" {
   description = "CIDRs permitidos para acceder a la API (0.0.0.0/0 solo para demo)"
   type        = list(string)

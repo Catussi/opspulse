@@ -1,0 +1,43 @@
+name: Publicar imágenes Docker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - "docker-compose.yml"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - context: backend
+            imagen: opspulse-api
+          - context: frontend
+            imagen: opspulse-frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build y push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./${{ matrix.context }}
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.imagen }}:latest
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.imagen }}:${{ github.sha }}
