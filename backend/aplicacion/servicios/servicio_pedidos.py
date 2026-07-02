@@ -4,7 +4,8 @@ Servicio de pedidos: lógica de negocio sobre la tabla `pedidos`.
 Las rutas HTTP no deberían consultar SQL directamente; delegan aquí.
 """
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
+from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy.orm import Session
 
 from aplicacion.esquemas.pedido import PedidoCrear, PedidoResumen
@@ -57,8 +58,44 @@ class ServicioPedidos:
         """
         Calcula KPIs para el dashboard.
 
-        Agrega totales y detecta el producto y región con más ventas.
+        Si existe el mart de dbt (`marts.mart_resumen_pedidos`), lo usa.
+        Si no, calcula en línea sobre la tabla operacional.
         """
+        resumen_mart = self._obtener_resumen_desde_mart()
+        if resumen_mart:
+            return resumen_mart
+
+        return self._calcular_resumen_operacional()
+
+    def _obtener_resumen_desde_mart(self) -> PedidoResumen | None:
+        """Lee KPIs pre-calculados por dbt, si el mart ya fue materializado."""
+        try:
+            fila = self._sesion.execute(
+                text(
+                    """
+                    SELECT total_pedidos, monto_total_ventas,
+                           producto_mas_vendido, region_top
+                    FROM marts.mart_resumen_pedidos
+                    LIMIT 1
+                    """
+                )
+            ).first()
+        except (ProgrammingError, OperationalError):
+            self._sesion.rollback()
+            return None
+
+        if not fila:
+            return None
+
+        return PedidoResumen(
+            total_pedidos=int(fila.total_pedidos),
+            monto_total_ventas=round(float(fila.monto_total_ventas), 2),
+            producto_mas_vendido=fila.producto_mas_vendido,
+            region_top=fila.region_top,
+        )
+
+    def _calcular_resumen_operacional(self) -> PedidoResumen:
+        """Agregación directa sobre `pedidos` (fallback sin dbt)."""
         total_pedidos = self._sesion.scalar(select(func.count(Pedido.id))) or 0
 
         monto_total = self._sesion.scalar(

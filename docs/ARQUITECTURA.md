@@ -66,7 +66,7 @@ flowchart TB
 |------|------------|--------|
 | MVP | FastAPI + Celery + PostgreSQL + Docker | Implementado |
 | V2 | Dashboard Angular | Implementado |
-| V3 | Apache Airflow + dbt | Planificado |
+| V3 | dbt + Airflow | Implementado |
 | V4 | Terraform AWS (ECS, RDS, S3) | Planificado |
 | V5 | MLflow + endpoint predictivo | Planificado |
 | V6 | Prometheus + Grafana | Planificado |
