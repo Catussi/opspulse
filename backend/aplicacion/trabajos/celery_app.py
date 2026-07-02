@@ -19,6 +19,7 @@ aplicacion_celery = Celery(
         "aplicacion.trabajos.tareas_etl",
         "aplicacion.trabajos.tareas_automatizacion",
         "aplicacion.trabajos.tareas_dbt",
+        "aplicacion.trabajos.tareas_ml",
     ],
 )
 

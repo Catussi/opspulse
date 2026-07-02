@@ -17,6 +17,7 @@ from aplicacion.rutas import (
     router_metricas,
     router_pedidos,
     router_salud,
+    router_ml,
     router_transformaciones,
 )
 
@@ -64,6 +65,7 @@ def crear_aplicacion() -> FastAPI:
     app.include_router(router_metricas)
     app.include_router(router_automatizacion)
     app.include_router(router_transformaciones)
+    app.include_router(router_ml)
 
     return app
 

@@ -8,6 +8,7 @@ Airflow programa pipelines que complementan el procesamiento en tiempo real de C
 |-----|----------|--------|
 | `transformaciones_dbt` | Diario 06:00 | `POST /api/v1/transformaciones/ejecutar-dbt` → Celery → `dbt run` |
 | `evaluar_reglas_automatizacion` | Cada 15 min | `POST /api/v1/automatizacion/evaluar` |
+| `entrenar_modelo_ml` | Domingos 03:00 | `POST /api/v1/ml/entrenar` |
 
 Airflow no ejecuta dbt directamente: solo orquesta llamadas HTTP a la API. El worker Celery corre `dbt run` con el proyecto montado en `/dbt`.
 

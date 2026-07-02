@@ -46,15 +46,19 @@ services:
       ENTORNO: desarrollo
       URL_BASE_DATOS: postgresql+psycopg://opspulse:opspulse_dev@postgres:5432/opspulse
       URL_REDIS: redis://redis:6379/0
+      URL_MLFLOW: http://mlflow:5000
     volumes:
       - ./backend:/codigo
       - ./datos/crudos:/datos/crudos
       - ./transformaciones/dbt:/dbt
+      - mlflow_datos:/mlflow
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      mlflow:
+        condition: service_started
 
   # Trabajador Celery: ejecuta pipelines ETL y automatizaciones en segundo plano
   trabajador:
@@ -67,15 +71,19 @@ services:
       ENTORNO: desarrollo
       URL_BASE_DATOS: postgresql+psycopg://opspulse:opspulse_dev@postgres:5432/opspulse
       URL_REDIS: redis://redis:6379/0
+      URL_MLFLOW: http://mlflow:5000
     volumes:
       - ./backend:/codigo
       - ./datos/crudos:/datos/crudos
       - ./transformaciones/dbt:/dbt
+      - mlflow_datos:/mlflow
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      mlflow:
+        condition: service_started
 
   # Panel opcional para monitorear tareas Celery (útil en demos)
   flower:
@@ -134,5 +142,23 @@ services:
       api:
         condition: service_started
 
+  # MLflow: tracking de experimentos y model registry
+  # UI: http://localhost:5000
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.19.0
+    container_name: opspulse-mlflow
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --default-artifact-root /mlflow/artifacts
+      --serve-artifacts
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow_datos:/mlflow
+
 volumes:
   datos_postgres:
+  mlflow_datos:
