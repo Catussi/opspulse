@@ -63,6 +63,7 @@
 }
 
 .carga,
+.ml,
 .tabla-contenedor {
   background: #fff;
   border: 1px solid #e5e7eb;
@@ -77,6 +78,60 @@
   gap: 0.5rem;
   margin-top: 0.75rem;
   font-weight: 600;
+}
+
+.carga__estado {
+  margin-top: 0.75rem;
+  color: #4b5563;
+  font-size: 0.9rem;
+}
+
+.ml__formulario {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.ml__formulario label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.ml__formulario input {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font: inherit;
+}
+
+.ml__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.ml__resultado {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: #f0fdf4;
+  border-radius: 8px;
+  border-left: 4px solid #22c55e;
+}
+
+.ml__meta {
+  color: #6b7280;
+  font-size: 0.85rem;
+  margin-left: 0.5rem;
+}
+
+.boton--primario {
+  background: #2563eb;
+  color: #fff;
 }
 
 .boton {

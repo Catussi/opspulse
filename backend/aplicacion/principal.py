@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from aplicacion.base_datos import crear_tablas
+from aplicacion.inicializacion import preparar_base_datos
 from aplicacion.configuracion import obtener_configuracion
 from aplicacion.metricas.instrumentacion import configurar_metricas_http
 from aplicacion.rutas import (
@@ -28,9 +28,11 @@ async def ciclo_vida_aplicacion(_: FastAPI):
     """
     Se ejecuta al arrancar y al apagar el servidor.
 
-    Al iniciar: crea tablas si no existen (desarrollo).
+    Al iniciar: aplica migraciones y seed de demo (excepto en entorno pruebas).
     """
-    crear_tablas()
+    config = obtener_configuracion()
+    if config.entorno != "pruebas":
+        preparar_base_datos()
     yield
 
 

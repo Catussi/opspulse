@@ -52,6 +52,48 @@
       Seleccionar archivo CSV
       <input type="file" accept=".csv" (change)="alSeleccionarArchivo($event)" [disabled]="cargando()" />
     </label>
+    @if (estadoIngesta()) {
+      <p class="carga__estado" role="status">{{ estadoIngesta() }}</p>
+    }
+  </section>
+
+  <!-- Predicción ML -->
+  <section class="ml">
+    <h2>Predicción de ventas (MLflow)</h2>
+    <p>Estima el monto de un pedido con el modelo registrado en MLflow.</p>
+    <div class="ml__formulario">
+      <label>
+        Producto
+        <input type="text" [(ngModel)]="mlProducto" [disabled]="cargando()" />
+      </label>
+      <label>
+        Cantidad
+        <input type="number" min="1" [(ngModel)]="mlCantidad" [disabled]="cargando()" />
+      </label>
+      <label>
+        Región
+        <input type="text" [(ngModel)]="mlRegion" [disabled]="cargando()" />
+      </label>
+      <label>
+        Fecha pedido
+        <input type="datetime-local" [(ngModel)]="mlFecha" [disabled]="cargando()" />
+      </label>
+    </div>
+    <div class="ml__acciones">
+      <button type="button" class="boton boton--primario" (click)="predecirVenta()" [disabled]="cargando()">
+        Predecir monto
+      </button>
+      <button type="button" class="boton boton--secundario" (click)="entrenarModelo()" [disabled]="entrenandoMl()">
+        {{ entrenandoMl() ? 'Entrenando…' : 'Entrenar modelo' }}
+      </button>
+    </div>
+    @if (prediccion(); as p) {
+      <p class="ml__resultado">
+        Monto estimado:
+        <strong>{{ p.monto_predicho | currency:'CLP':'symbol-narrow':'1.0-0' }}</strong>
+        <span class="ml__meta">({{ p.modelo }} v{{ p.version_modelo ?? '?' }})</span>
+      </p>
+    }
   </section>
 
   <!-- Tabla de pedidos -->

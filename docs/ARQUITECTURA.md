@@ -92,13 +92,13 @@ El panel consume la API REST y delega agregaciones al backend. Usé Angular 19 p
 ## Despliegue objetivo
 
 ```
-GitHub Actions  →  build y push de imágenes Docker
+GitHub Actions  →  build y push de imágenes Docker a GHCR (workflow publicar-imagenes.yml)
 Terraform       →  ECS Fargate, RDS PostgreSQL, S3
-Vercel          →  frontend Angular
-Airflow         →  orquestación de pipelines ETL programados
+Frontend Docker →  nginx con proxy a la API (servicio `frontend` en compose)
+Airflow         →  orquestación de pipelines ETL programados (perfil `datos`)
 ```
 
-La configuración de Terraform y los DAGs de Airflow están en sus carpetas respectivas dentro del repositorio.
+Las imágenes publicadas en GHCR alimentan `var.api_image` en Terraform. Redis en AWS se configura con `var.url_redis` (ElastiCache u otro broker); el worker Celery es la siguiente iteración de infra.
 
 ## Machine learning (fase 5)
 

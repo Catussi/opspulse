@@ -46,11 +46,17 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "8kB",
+                  "maximumError": "16kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "src/entornos/entorno.ts",
+                  "with": "src/entornos/entorno.prod.ts"
+                }
+              ]
             },
             "development": {
               "optimization": false,

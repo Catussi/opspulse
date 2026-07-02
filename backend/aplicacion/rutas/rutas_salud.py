@@ -2,8 +2,12 @@
 Rutas de salud: usadas por Docker, Kubernetes y monitoreo.
 """
 
-from fastapi import APIRouter
+import redis
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
+from aplicacion.base_datos import obtener_sesion
 from aplicacion.configuracion import obtener_configuracion
 from aplicacion.esquemas.salud import RespuestaSalud
 
@@ -29,10 +33,37 @@ def verificar_salud() -> RespuestaSalud:
 
 
 @router.get("/salud/listo")
-def verificar_listo() -> dict:
+def verificar_listo(sesion: Session = Depends(obtener_sesion)) -> dict:
     """
-  Readiness check: confirma que la app puede atender tráfico.
+    Readiness check: valida PostgreSQL y Redis antes de recibir tráfico.
+    """
+    config = obtener_configuracion()
+    dependencias: dict[str, str] = {}
 
-  En versiones futuras aquí se validará conexión a PostgreSQL y Redis.
-  """
-    return {"estado": "listo", "mensaje": "La API puede recibir peticiones."}
+    try:
+        sesion.execute(text("SELECT 1"))
+        dependencias["postgres"] = "ok"
+    except Exception as error:
+        dependencias["postgres"] = f"error: {error}"
+
+    try:
+        cliente_redis = redis.from_url(config.url_redis)
+        cliente_redis.ping()
+        dependencias["redis"] = "ok"
+    except Exception as error:
+        dependencias["redis"] = f"error: {error}"
+
+    if all(valor == "ok" for valor in dependencias.values()):
+        return {
+            "estado": "listo",
+            "mensaje": "La API puede recibir peticiones.",
+            "dependencias": dependencias,
+        }
+
+    raise HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail={
+            "estado": "no_listo",
+            "dependencias": dependencias,
+        },
+    )

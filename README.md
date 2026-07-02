@@ -1,6 +1,7 @@
 # OpsPulse
 
 [![CI Backend](https://github.com/Catussi/opspulse/actions/workflows/ci-backend.yml/badge.svg)](https://github.com/Catussi/opspulse/actions/workflows/ci-backend.yml)
+[![CI Frontend](https://github.com/Catussi/opspulse/actions/workflows/ci-frontend.yml/badge.svg)](https://github.com/Catussi/opspulse/actions/workflows/ci-frontend.yml)
 [![Terraform AWS](https://github.com/Catussi/opspulse/actions/workflows/terraform.yml/badge.svg)](https://github.com/Catussi/opspulse/actions/workflows/terraform.yml)
 
 Plataforma de operaciones **data-driven** para retail: ingesta de pedidos, procesamiento asíncrono, transformaciones analíticas, métricas operativas y reglas de automatización. La construí para demostrar en un solo repositorio el flujo que aplico entre backend Python, ingeniería de datos y despliegue en la nube.
@@ -96,6 +97,15 @@ Airflow **no ejecuta dbt directamente**: los DAGs llaman a la API (`POST /api/v1
 docker compose up --build
 ```
 
+Al primer arranque la API aplica **migraciones Alembic** y carga **datos de demostración** si la base está vacía. El **frontend** corre en Docker (nginx en el puerto 4200) con proxy a la API.
+
+**Stack completo** (incluye Prometheus y Grafana):
+
+```powershell
+.\scripts\levantar.ps1
+# equivalente a: docker compose --profile observabilidad up --build
+```
+
 | Servicio | URL |
 |----------|-----|
 | API y OpenAPI | http://localhost:8001/api/docs |
@@ -104,7 +114,7 @@ docker compose up --build
 | Prometheus (perfil `observabilidad`) | http://localhost:9090 |
 | Grafana (perfil `observabilidad`) | http://localhost:3000 — `admin` / `admin` |
 | Métricas API | http://localhost:8001/metrics |
-| Frontend | http://localhost:4200 |
+| Frontend (Docker) | http://localhost:4200 |
 | PostgreSQL (host) | `localhost:5433` |
 | Airflow (perfil `datos`) | http://localhost:8081 — `admin` / `admin` |
 
@@ -211,6 +221,7 @@ opspulse/
 ├── datos/ejemplo/            # CSV de demostración
 ├── modelado/                 # Entrenamiento ML y notas
 ├── observabilidad/           # Prometheus, Grafana y dashboards
+├── scripts/                  # levantar.ps1, utilidades
 ├── docs/                     # Arquitectura, convenciones e imágenes
 └── .github/workflows/        # CI backend y validación Terraform
 ```
@@ -225,6 +236,21 @@ opspulse/
 | V4 | Terraform AWS (ECS, RDS, S3) | ✅ |
 | V5 | MLflow + endpoint predictivo | ✅ |
 | V6 | Prometheus + Grafana | ✅ |
+
+## CI/CD y despliegue
+
+| Workflow | Qué hace |
+|----------|----------|
+| `ci-backend.yml` | pytest del backend |
+| `ci-frontend.yml` | `npm run build` del panel Angular |
+| `terraform.yml` | fmt, validate y plan de Terraform |
+| `publicar-imagenes.yml` | Build y push a **GHCR** (`opspulse-api`, `opspulse-frontend`) en cada push a `main` |
+
+Imágenes: `ghcr.io/catussi/opspulse-api:latest` y `ghcr.io/catussi/opspulse-frontend:latest` (configurar `api_image` en Terraform).
+
+## Licencia
+
+MIT — ver [LICENSE](LICENSE). Contribuciones: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Convenciones
 
