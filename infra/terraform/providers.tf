@@ -3,9 +3,9 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Proyecto    = "opspulse"
-      Gestionado  = "terraform"
-      Entorno     = var.entorno
+      Proyecto   = "opspulse"
+      Gestionado = "terraform"
+      Entorno    = var.entorno
     }
   }
 }
