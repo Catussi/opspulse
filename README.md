@@ -25,7 +25,8 @@ OpsPulse centraliza el ciclo operativo de un negocio de retail:
 | Contenedores | Docker Compose |
 | Transformaciones | dbt (staging → marts) |
 | Orquestación | Apache Airflow (perfil `datos`) |
-| En desarrollo | Terraform AWS, MLflow |
+| Infraestructura | Terraform AWS (S3, RDS, ECS) |
+| En desarrollo | MLflow |
 
 ## Cómo ejecutarlo
 

@@ -1,23 +1,59 @@
 # Infraestructura AWS — Terraform
 
-Configuración de infraestructura como código para el despliegue de OpsPulse en AWS. Está en desarrollo.
+IaC para desplegar OpsPulse en AWS: data lake (S3), PostgreSQL (RDS) y API (ECS Fargate).
 
-## Recursos planificados
+## Recursos que crea
 
-| Recurso | Uso |
-|---------|-----|
-| **S3** | Data lake — archivos CSV crudos antes del ETL |
-| **RDS PostgreSQL** | Base de datos de producción |
-| **ECS Fargate** | Contenedores de la API FastAPI y el worker Celery |
-| **IAM** | Roles con permisos mínimos necesarios |
+| Recurso | Propósito |
+|---------|-----------|
+| **S3** | Data lake — CSV crudos con versionado y cifrado |
+| **RDS PostgreSQL 16** | Base de datos de producción |
+| **ECS Fargate** | Contenedor de la API FastAPI |
+| **IAM** | Roles mínimos para ECS y acceso a S3 |
+| **CloudWatch Logs** | Logs del contenedor API |
 
-## Uso previsto
+Redis/Celery y Airflow pueden añadirse en una segunda iteración (ElastiCache + segundo servicio ECS).
 
-```bash
+## Requisitos
+
+- [Terraform](https://www.terraform.io/downloads) >= 1.5
+- Cuenta AWS con credenciales configuradas (`aws configure`)
+
+## Uso
+
+```powershell
 cd infra/terraform
+copy terraform.tfvars.example terraform.tfvars
+# Editar terraform.tfvars y definir contraseña:
+# $env:TF_VAR_db_password = "clave-segura-aqui"
+
 terraform init
 terraform plan
 terraform apply
 ```
 
-El pipeline de CI/CD (GitHub Actions) construirá las imágenes Docker y las publicará antes del deploy. Ver `docs/ARQUITECTURA.md` para el diagrama completo.
+## Variables importantes
+
+| Variable | Descripción |
+|----------|-------------|
+| `db_password` | Contraseña RDS (sensible, no commitear) |
+| `api_image` | URI de imagen en ECR; si está vacía, solo se crea infra base sin servicio ECS |
+| `entorno` | `staging` o `prod` |
+
+## Outputs
+
+Tras `terraform apply`:
+
+```powershell
+terraform output rds_endpoint
+terraform output s3_bucket_datos_crudos
+```
+
+## CI
+
+El workflow `.github/workflows/terraform.yml` ejecuta `fmt`, `validate` y `plan` en cada PR que toque esta carpeta.
+
+## Notas
+
+- Usa la VPC por defecto de la cuenta para simplificar el portafolio.
+- En producción real: VPC dedicada, ElastiCache para Redis, secrets en AWS Secrets Manager y backend remoto S3 para el state.
