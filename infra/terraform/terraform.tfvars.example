@@ -1,0 +1,7 @@
+region          = "us-east-1"
+entorno         = "staging"
+nombre_proyecto = "opspulse"
+db_username     = "opspulse"
+# db_password   = "CAMBIAR_EN_SECRETO"  # usar: $env:TF_VAR_db_password = "tu-clave"
+db_instance_class = "db.t4g.micro"
+# api_image     = "ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/opspulse-api:latest"
